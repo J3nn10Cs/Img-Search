@@ -1,5 +1,13 @@
 const form = document.querySelector('#formulario');
 const result = document.querySelector('#resultado');
+const pageDiv = document.querySelector('#paginacion')
+
+//crear variable para el generador
+let pagPages = 40;
+let iterador;
+let totalPages;
+let pageActual=1;
+
 
 window.onload = () => {
     form.addEventListener('submit', validateForm);
@@ -9,21 +17,30 @@ function validateForm(e){
     e.preventDefault();
 
     const search = document.querySelector('#termino').value;
-
+    
     if(search ===''){
         showAlert(`It can't be empty`);
         return
     }
+    
+    validateApi();
+}
 
+function validateApi(){
+    const search = document.querySelector('#termino').value;
     const key = '45474888-2744e73ea41eee74ea2d3e78e';
-    const url = `https://pixabay.com/api/?key=${key}&q=${search}&per_page=100`
+    const url = `https://pixabay.com/api/?key=${key}&q=${search}&per_page=${pagPages}&page=${pageActual}`
 
     //traer los datos de la api
     fetch(url)
         .then(request => {
             return request.json();
         })
-        .then(result => showImg(result.hits))
+        .then(result => {
+            //obtener la cantidad del paginador
+            totalPages = getPage(result.totalHits);
+            showImg(result.hits)
+        })
 }
 
 function showAlert(message){
@@ -43,7 +60,7 @@ function showAlert(message){
 }
 
 function showImg(img){
-    deleteHtml();
+    deleteHtml(result);
     img.forEach(imgPixabay => {
         const {likes,views,previewURL,largeImageURL,tags} = imgPixabay
         const resultDiv = document.createElement('DIV');
@@ -59,12 +76,48 @@ function showImg(img){
             </div>
         `
 
-        result.appendChild(resultDiv)
+        result.appendChild(resultDiv);
+
     });
+    printGenerator();
 }
 
-function deleteHtml(){
-    while(result.firstChild){
-        result.removeChild(result.firstChild)
+function printGenerator(){
+    deleteHtml(pageDiv)
+    iterador = createPage(totalPages);
+    while(true){
+        const {value,done} = iterador.next();
+
+        if(done) return;
+
+        //cado contrario
+        const buuton = document.createElement('A');
+        buuton.href = '#';
+        buuton.dataset.pag = value;
+        buuton.textContent = value;
+        buuton.classList.add('siguiente','bg-yellow-400','px-4','py-1','mr-2','font-bold','rounded')
+        buuton.onclick = () => {
+            pageActual = value
+            validateApi();
+        }
+        pageDiv.appendChild(buuton);
+    }
+}
+
+
+function getPage(total){
+    return parseInt(Math.ceil(total/pagPages))
+}
+
+//Generador para la cantidad de elementos
+function *createPage(total){
+    for(let i = 1; i<=total; i++){
+        yield i;
+    }
+}
+
+function deleteHtml(param){
+    while(param.firstChild){
+        param.removeChild(param.firstChild)
     }
 }
