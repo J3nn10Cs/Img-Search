@@ -26,21 +26,21 @@ function validateForm(e){
     validateApi();
 }
 
-function validateApi(){
+async function validateApi(){
     const search = document.querySelector('#termino').value;
     const key = '45474888-2744e73ea41eee74ea2d3e78e';
     const url = `https://pixabay.com/api/?key=${key}&q=${search}&per_page=${pagPages}&page=${pageActual}`
 
     //traer los datos de la api
-    fetch(url)
-        .then(request => {
-            return request.json();
-        })
-        .then(result => {
-            //obtener la cantidad del paginador
-            totalPages = getPage(result.totalHits);
-            showImg(result.hits)
-        })
+
+    try {
+        const request = await fetch(url)
+        const result = await request.json()
+        totalPages = getPage(result.totalHits)
+        showImg(result.hits)
+    } catch (error) {
+        
+    }
 }
 
 function showAlert(message){
